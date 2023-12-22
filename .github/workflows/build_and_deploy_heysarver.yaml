@@ -1,4 +1,4 @@
-name: Build and Deploy Docker Image - SarvEnt
+name: Build and Deploy Docker Image - heysarver
 
 on:
   workflow_dispatch:
@@ -34,6 +34,6 @@ jobs:
         platforms: linux/amd64,linux/arm64
         pull: true
         push: true
-        tags: sarvent/${{ github.event.inputs.container_name }}:${{ github.event.inputs.tag_name }}
+        tags: heysarver/${{ github.event.inputs.container_name }}:${{ github.event.inputs.tag_name }}
         build-args: |
           TAG_NAME=${{ github.event.inputs.tag_name }}
