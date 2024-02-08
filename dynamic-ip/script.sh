@@ -3,7 +3,6 @@
 domain="${DOMAIN}"
 host="${HOST}"
 
-# Get the current public IP address from ip.me
 public_ip=$(curl -s http://ifconfig.io)
 
 dns_record=$(curl -s \
