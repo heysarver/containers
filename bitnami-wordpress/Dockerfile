@@ -15,10 +15,8 @@ FROM bitnami/wordpress:${TAG_NAME}
 
 USER root
 
-# Copy the Redis extension from the build stage
 COPY --from=build /opt/bitnami/php/lib/php/extensions/redis.so /opt/bitnami/php/lib/php/extensions/redis.so
 
-# Enable Redis extension in php.ini
 RUN echo 'extension=redis.so' >> /opt/bitnami/php/etc/php.ini
 
 EXPOSE 8080 8443
