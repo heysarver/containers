@@ -1,7 +1,7 @@
 ARG TAG_NAME
 
 # Build stage
-FROM bitnami/wordpress:${TAG_NAME} as build
+FROM bitnami/wordpress:${TAG_NAME} AS build
 
 USER root
 
