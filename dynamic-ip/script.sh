@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Check if .env file exists and source it
 if [ -f .env ]; then
   source .env
 fi
@@ -11,15 +10,13 @@ local="${LOCAL:-False}"
 
 if [ "$local" = "True" ]; then
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    # Linux
     public_ip=$(ip route get 1 | awk '{print $NF;exit}')
   elif [[ "$OSTYPE" == "darwin"* ]]; then
-    # Mac OSX
     default_interface=$(route get default | grep interface: | awk '{print $2}')
     public_ip=$(ifconfig $default_interface | grep 'inet ' | awk '$1=="inet" {print $2}')
   fi
 else
-  public_ip=$(curl -s http://ifconfig.io)
+  public_ip=$(curl -s -4 http://ifconfig.io)
 fi
 
 dns_record=$(curl -s \
