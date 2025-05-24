@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "MySQL Troubleshooting Tool"
+echo "-----------------------"
+echo "1. Check process list"
+echo "   Usage: mysql -h <host> -u <user> -p -e \"SHOW PROCESSLIST;\""
+echo "2. Check table sizes"
+echo "   Usage: mysql -h <host> -u <user> -p -e \"SELECT table_name, table_schema, ROUND((data_length + index_length)/1024/1024,2) AS total_mb FROM information_schema.tables ORDER BY total_mb DESC LIMIT 10;\""
+echo "3. Check status"
+echo "   Usage: mysql -h <host> -u <user> -p -e \"SHOW STATUS;\""
+echo "4. Check variables"
+echo "   Usage: mysql -h <host> -u <user> -p -e \"SHOW VARIABLES;\""
+echo "5. Check slow queries"
+echo "   Usage: mysql -h <host> -u <user> -p -e \"SHOW GLOBAL VARIABLES LIKE '%slow%'; SHOW GLOBAL STATUS LIKE '%slow%';\"" 

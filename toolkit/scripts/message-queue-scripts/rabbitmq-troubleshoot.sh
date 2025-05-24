@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "RabbitMQ Troubleshooting Tool"
+echo "--------------------------"
+echo "1. List queues"
+echo "   Usage: rabbitmqctl -n <node> list_queues"
+echo "2. List exchanges"
+echo "   Usage: rabbitmqctl -n <node> list_exchanges"
+echo "3. List connections"
+echo "   Usage: rabbitmqctl -n <node> list_connections"
+echo "4. List channels"
+echo "   Usage: rabbitmqctl -n <node> list_channels"
+echo "5. Check cluster status"
+echo "   Usage: rabbitmqctl -n <node> cluster_status" 

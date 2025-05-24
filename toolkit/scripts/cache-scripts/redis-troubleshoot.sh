@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "Redis Troubleshooting Tool"
+echo "-----------------------"
+echo "1. Check Redis server info"
+echo "   Usage: redis-cli -h <host> -p <port> info"
+echo "2. Monitor Redis commands in real-time"
+echo "   Usage: redis-cli -h <host> -p <port> monitor"
+echo "3. Check Redis memory usage"
+echo "   Usage: redis-cli -h <host> -p <port> info memory"
+echo "4. Analyze Redis keyspace"
+echo "   Usage: redis-cli -h <host> -p <port> --bigkeys"
+echo "5. Check Redis latency"
+echo "   Usage: redis-cli -h <host> -p <port> --latency" 

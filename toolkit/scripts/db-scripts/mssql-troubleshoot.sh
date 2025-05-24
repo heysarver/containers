@@ -1,0 +1,13 @@
+#!/bin/bash
+echo "Microsoft SQL Server Troubleshooting Tool"
+echo "-------------------------------------"
+echo "1. Check active connections"
+echo "   Usage: sqlcmd -S <server> -U <user> -P <password> -Q \"SELECT session_id, login_time, host_name, program_name FROM sys.dm_exec_sessions WHERE is_user_process = 1;\""
+echo "2. Check database sizes"
+echo "   Usage: sqlcmd -S <server> -U <user> -P <password> -Q \"SELECT name, size/128.0 AS size_in_mb FROM sys.database_files;\""
+echo "3. Check current activity"
+echo "   Usage: sqlcmd -S <server> -U <user> -P <password> -Q \"SELECT * FROM sys.dm_exec_requests;\""
+echo "4. Check wait stats"
+echo "   Usage: sqlcmd -S <server> -U <user> -P <password> -Q \"SELECT wait_type, wait_time_ms FROM sys.dm_os_wait_stats ORDER BY wait_time_ms DESC;\""
+echo "5. Check index usage stats"
+echo "   Usage: sqlcmd -S <server> -U <user> -P <password> -Q \"SELECT * FROM sys.dm_db_index_usage_stats;\"" 
