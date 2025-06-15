@@ -1,0 +1,120 @@
+name: Auto-build bitnami-wordpress with Redis
+
+on:
+  schedule:
+    # Check for new releases every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  check-and-build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Get latest bitnami/wordpress tags
+      id: get-tags
+      run: |
+        # Get all tags from Docker Hub API
+        TAGS_JSON=$(curl -s "https://registry.hub.docker.com/v2/repositories/bitnami/wordpress/tags?page_size=100" | jq -r '.results[].name' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+)*$' | head -20)
+        
+        # Get the latest semantic version tag (excluding pre-releases)
+        LATEST_TAG=$(echo "$TAGS_JSON" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+        
+        echo "latest_tag=$LATEST_TAG" >> $GITHUB_OUTPUT
+        echo "Found latest tag: $LATEST_TAG"
+
+    - name: Check if we already built this version
+      id: check-built
+      run: |
+        LATEST_TAG="${{ steps.get-tags.outputs.latest_tag }}"
+        
+        # Check if our image already exists with this tag
+        HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "https://hub.docker.com/v2/repositories/heysarver/bitnami-wordpress/tags/$LATEST_TAG/")
+        
+        if [ "$HTTP_CODE" == "200" ]; then
+          echo "already_built=true" >> $GITHUB_OUTPUT
+          echo "Image already exists for tag: $LATEST_TAG"
+        else
+          echo "already_built=false" >> $GITHUB_OUTPUT
+          echo "Image does not exist for tag: $LATEST_TAG - will build"
+        fi
+
+    - name: Set up Docker Buildx
+      if: steps.check-built.outputs.already_built == 'false'
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Docker Hub
+      if: steps.check-built.outputs.already_built == 'false'
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.HEYSARVER_DOCKERHUB_USERNAME }}
+        password: ${{ secrets.HEYSARVER_DOCKERHUB_ACCESS_TOKEN }}
+
+    - name: Generate semantic version tags
+      if: steps.check-built.outputs.already_built == 'false'
+      id: generate-tags
+      run: |
+        TAG_NAME="${{ steps.get-tags.outputs.latest_tag }}"
+        
+        # Split version into parts
+        IFS='.' read -ra VERSION_PARTS <<< "$TAG_NAME"
+        
+        # Generate tags
+        TAGS="heysarver/bitnami-wordpress:latest"
+        TAGS="$TAGS,heysarver/bitnami-wordpress:$TAG_NAME"
+        
+        # Add semantic version tags (x, x.x, x.x.x)
+        for ((i=0; i<${#VERSION_PARTS[@]}; i++)); do
+          PARTIAL_VERSION=""
+          for ((j=0; j<=i; j++)); do
+            if [ $j -eq 0 ]; then
+              PARTIAL_VERSION="${VERSION_PARTS[j]}"
+            else
+              PARTIAL_VERSION="$PARTIAL_VERSION.${VERSION_PARTS[j]}"
+            fi
+          done
+          # Only add if not already the full version
+          if [ "$PARTIAL_VERSION" != "$TAG_NAME" ]; then
+            TAGS="$TAGS,heysarver/bitnami-wordpress:$PARTIAL_VERSION"
+          fi
+        done
+        
+        echo "tags=$TAGS" >> $GITHUB_OUTPUT
+        echo "Generated tags: $TAGS"
+
+    - name: Build and push Docker image
+      if: steps.check-built.outputs.already_built == 'false'
+      uses: docker/build-push-action@v5
+      with:
+        context: ./bitnami-wordpress
+        platforms: linux/amd64,linux/arm64
+        pull: true
+        push: true
+        tags: ${{ steps.generate-tags.outputs.tags }}
+        build-args: |
+          TAG_NAME=${{ steps.get-tags.outputs.latest_tag }}
+
+    - name: Create release summary
+      if: steps.check-built.outputs.already_built == 'false'
+      run: |
+        echo "## 🚀 New bitnami-wordpress Build Complete!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Base Image:** bitnami/wordpress:${{ steps.get-tags.outputs.latest_tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Published Tags:** ${{ steps.generate-tags.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Docker Hub:** https://hub.docker.com/r/heysarver/bitnami-wordpress" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Features Added:" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Redis PHP extension installed" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Multi-architecture support (AMD64/ARM64)" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ Automatic semantic versioning" >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify if no build needed
+      if: steps.check-built.outputs.already_built == 'true'
+      run: |
+        echo "## ℹ️ No Build Required" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Latest bitnami/wordpress version:** ${{ steps.get-tags.outputs.latest_tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Status:** Already built and published" >> $GITHUB_STEP_SUMMARY 
